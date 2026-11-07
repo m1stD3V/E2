@@ -17,6 +17,12 @@ export interface ShiftResult {
   balance: number;
 }
 
+interface ReportRow {
+  label: string;
+  value: number;
+  color: string;
+}
+
 function calculateShiftResult(activeProducers: number): ShiftResult {
   const production = activeProducers * 3;
   const consumption = STANDARD_CONSUMPTION;
@@ -31,6 +37,7 @@ function calculateShiftResult(activeProducers: number): ShiftResult {
 
 function renderAllocation(result: ShiftResult) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
   for (let i = 0; i < result.capacity; i++) {
     ctx.fillStyle = i < result.producers ? "#27766b" : "#c9d2c9";
     ctx.fillRect(18 + i * 45, 16, 36, 36);
@@ -38,16 +45,35 @@ function renderAllocation(result: ShiftResult) {
     ctx.font = "16px system-ui";
     ctx.fillText(String(i + 1), 31 + i * 45, 40);
   }
+
   ctx.fillStyle = "#233e43";
   ctx.font = "14px system-ui";
   ctx.fillText(`Producers: ${result.producers} / ${result.capacity}`, 18, 76);
-  ctx.fillText(`Production: ${result.production}`, 18, 102);
-  ctx.fillStyle = "#27766b";
-  ctx.fillRect(18, 110, result.production * 14, 20);
-  ctx.fillStyle = "#233e43";
-  ctx.fillText(`Consumption: ${result.consumption}`, 18, 154);
-  ctx.fillStyle = "#a44d23";
-  ctx.fillRect(18, 162, result.consumption * 14, 20);
+
+  const rows: ReportRow[] = [
+    {
+      label: `Production: ${result.production}`,
+      value: result.production,
+      color: "#27766b",
+    },
+    {
+      label: `Consumption: ${result.consumption}`,
+      value: result.consumption,
+      color: "#a44d23",
+    },
+  ];
+
+  rows.forEach((row, index) => {
+    const textY = 102 + index * 52;
+    const barY = 110 + index * 52;
+
+    ctx.fillStyle = "#233e43";
+    ctx.font = "14px system-ui";
+    ctx.fillText(row.label, 18, textY);
+
+    ctx.fillStyle = row.color;
+    ctx.fillRect(18, barY, row.value * 14, 20);
+  });
 
   readout.textContent =
     `Assigned: ${result.producers}/${result.capacity} · Production: ${result.production} · Consumption: ${result.consumption} · Balance: ${
