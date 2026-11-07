@@ -20,6 +20,8 @@ export interface ShieldSnapshot {
   missing: number;
 }
 
+const shieldEventTarget = new EventTarget();
+
 function createShieldSnapshot(currentCharge: number): ShieldSnapshot {
   return {
     charge: currentCharge,
@@ -58,9 +60,21 @@ function setCount(next: number) {
   if (bounded === count) return;
   count = bounded;
   const snapshot = createShieldSnapshot(count);
-  renderMeter(snapshot);
+
+  const event = new CustomEvent<ShieldSnapshot>("shieldchange", {
+    detail: snapshot,
+  });
+  shieldEventTarget.dispatchEvent(event);
+
   if (panel) updateStats(snapshot);
 }
+
+shieldEventTarget.addEventListener(
+  "shieldchange",
+  ((event: CustomEvent<ShieldSnapshot>) => {
+    renderMeter(event.detail);
+  }) as EventListener,
+);
 
 document.querySelector<HTMLButtonElement>("#counter-less")!.onclick = () => {
   setCount(count - 1);
